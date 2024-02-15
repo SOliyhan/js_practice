@@ -3,13 +3,14 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from . import serializers
 from . models import Order
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser
 from django.contrib.auth import get_user_model
-
+from drf_yasg.utils import swagger_auto_schema
 
 User = get_user_model()
 
 class HelloOrderView(generics.GenericAPIView):
+    @swagger_auto_schema(operation_summary="Hello Orders view")
     def get(self, request):
         return Response(data={"message":"Hello Orders"}, status=status.HTTP_200_OK)
 
@@ -17,13 +18,15 @@ class HelloOrderView(generics.GenericAPIView):
 class OrderCreateListView(generics.GenericAPIView):
     serializer_class= serializers.OrderCreationSerializer
     queryset = Order.objects.all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
+    @swagger_auto_schema(operation_summary="List all orders")
     def get(self, request):
         orders = Order.objects.all()
         serializer = self.serializer_class(instance=orders, many=True)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
+    @swagger_auto_schema(operation_summary="Create a order")
     def post(self, request):
         data = request.data
         serializer = self.serializer_class(data=data)
@@ -41,14 +44,16 @@ class OrderCreateListView(generics.GenericAPIView):
 
 class OrderDetailView(generics.GenericAPIView):
     serializer_class= serializers.OrderDetailSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminUser]
 
+    @swagger_auto_schema(operation_summary="Retrieve an order")
     def get(self, request, order_id):
         order = get_object_or_404(Order,pk=order_id)
 
         serializer = self.serializer_class(instance=order)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
+    @swagger_auto_schema(operation_summary="Update an order")
     def put(self, request, order_id):
         data = request.data
 
@@ -61,6 +66,7 @@ class OrderDetailView(generics.GenericAPIView):
         
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(operation_summary="Delete an order by order_id")
     def delete(self, request, order_id):
         order = get_object_or_404(Order, pk=order_id)
         order.delete()
@@ -70,7 +76,9 @@ class OrderDetailView(generics.GenericAPIView):
 
 class UpdateOrderStatus(generics.GenericAPIView):
     serializer_class = serializers.OrderStatusUpdateSerializer
+    permission_classes = [IsAdminUser]
 
+    @swagger_auto_schema(operation_summary="Update order status by order_id")
     def put(self, request, order_id):
         order = get_object_or_404(Order, pk=order_id)
 
@@ -88,6 +96,7 @@ class UpdateOrderStatus(generics.GenericAPIView):
 class UserOrdersView(generics.GenericAPIView):
     serializer_class = serializers.OrderDetailSerializer
 
+    @swagger_auto_schema(operation_summary="Get all orders for a user")
     def get(self, request, user_id):
         user = User.objects.get(pk=user_id)
         
@@ -99,7 +108,8 @@ class UserOrdersView(generics.GenericAPIView):
 
 class UserOrderDetailView(generics.GenericAPIView):
     serializer_class = serializers.OrderDetailSerializer
- 
+    
+    @swagger_auto_schema(operation_summary="Get a user's specific order")
     def get(self, request, user_id, order_id):
         try:
             user = User.objects.get(pk=user_id)

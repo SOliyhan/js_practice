@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'phonenumber_field',
     'djoser',
+    'drf_yasg',
 ]
 
 AUTH_USER_MODEL = 'authentication.User'
@@ -52,7 +53,15 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': False,
 }
 
-
+SWAGGER_SETTINGS = {
+   'SECURITY_DEFINITIONS': {
+      'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header'
+      }
+   }
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

@@ -4,3 +4,4 @@ env
 .idea
 *.sqlite3
 .db
+.vscode
